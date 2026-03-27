@@ -49,12 +49,14 @@
       -webkit-overflow-scrolling: touch;
     }
 
-    .screen.active { transform: translateX(0); }
+    .screen { pointer-events: none; }
+    .screen.active { transform: translateX(0); pointer-events: auto; }
 
     #home {
       transform: translateX(0);
       z-index: 0;
       overflow: hidden;
+      pointer-events: auto;
     }
 
     /* ---- HOME ---- */
@@ -554,7 +556,7 @@ const DEFAULTS = () => ({
 
 let data = (() => {
   try { return JSON.parse(localStorage.getItem(KEY)) || DEFAULTS(); }
-  catch { return DEFAULTS(); }
+  catch(e) { return DEFAULTS(); }
 })();
 
 function persist() {
