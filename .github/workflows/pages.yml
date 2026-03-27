@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - claude/cardio-tracker-pwa-eHk0d
+      - claude/add-german-version-BYyiB
 
 permissions:
   contents: read
