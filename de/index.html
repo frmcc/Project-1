@@ -185,7 +185,7 @@
       font-size: 13px;
       letter-spacing: 4px;
       text-transform: uppercase;
-      color: var(--dim);
+      color: #777;
     }
 
     /* ---- RULES BOX ---- */
@@ -215,7 +215,7 @@
     }
 
     .rx-label {
-      font-size: 9px;
+      font-size: 10px;
       letter-spacing: 4px;
       color: var(--dim);
       text-transform: uppercase;
@@ -280,7 +280,7 @@
 
     /* ---- RUN ENTRIES ---- */
     .section-label {
-      font-size: 9px;
+      font-size: 10px;
       letter-spacing: 4px;
       color: var(--dim);
       text-transform: uppercase;
@@ -322,8 +322,6 @@
       font-size: 12px;
       text-align: center;
       padding: 18px;
-      border: 1px dashed #1e1e1e;
-      border-radius: 8px;
       letter-spacing: 1px;
     }
 
@@ -365,7 +363,7 @@
 
     .hr-input:focus {
       outline: none;
-      border-color: #383838;
+      border-color: #555;
     }
 
     .result-reveal {
@@ -379,7 +377,7 @@
       display: none;
     }
 
-    .result-reveal.show { display: block; }
+    .result-reveal.show { display: block; animation: fadeIn 0.22s ease; }
 
     /* ---- MODAL ---- */
     .modal-bg {
@@ -430,6 +428,20 @@
     .acc-z2   { color: var(--green); }
     .acc-long { color: var(--purple); }
     .acc-walk { color: var(--gray); }
+
+    /* ---- REFINEMENTS ---- */
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+
+    .btn-back:hover    { color: var(--text); }
+    .gear-btn:hover    { color: var(--text); }
+    .btn-primary:hover { background: #222; border-color: #3a3a3a; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
@@ -457,7 +469,7 @@
     <div class="rx-values">
       <div class="rx-val">
         <div class="rx-num" id="rx-pace"></div>
-        <div class="rx-unit">KM / H</div>
+        <div class="rx-unit">km/h</div>
       </div>
       <div class="rx-val">
         <div class="rx-num acc-z2" id="rx-dur"></div>
@@ -482,11 +494,11 @@
   <div class="log-fields">
     <div>
       <div class="field-label">Durchschn. Herzfrequenz</div>
-      <input type="number" class="hr-input" id="avg-hr" placeholder="000" min="40" max="230" inputmode="numeric">
+      <input type="number" class="hr-input" id="avg-hr" placeholder="" min="40" max="230" inputmode="numeric">
     </div>
     <div>
       <div class="field-label">Max. Herzfrequenz</div>
-      <input type="number" class="hr-input" id="max-hr" placeholder="000" min="40" max="230" inputmode="numeric">
+      <input type="number" class="hr-input" id="max-hr" placeholder="" min="40" max="230" inputmode="numeric">
     </div>
     <div class="result-reveal" id="run-result"></div>
   </div>
@@ -520,7 +532,7 @@
   <div class="log-fields">
     <div>
       <div class="field-label">Durchschn. Herzfrequenz</div>
-      <input type="number" class="hr-input" id="walk-hr" placeholder="000" min="40" max="200" inputmode="numeric">
+      <input type="number" class="hr-input" id="walk-hr" placeholder="" min="40" max="200" inputmode="numeric">
     </div>
     <div class="result-reveal" id="walk-result"></div>
   </div>
@@ -686,7 +698,7 @@ function renderSession(key) {
   // Streak pips
   const p1 = `<span class="pip${s.streak >= 1 ? ' ' + cfg.pipOn : ''}"></span>`;
   const p2 = `<span class="pip${s.streak >= 2 ? ' ' + cfg.pipOn : ''}"></span>`;
-  document.getElementById('streak-row').innerHTML = `STREAK ${p1}${p2} ${s.streak} / 2`;
+  document.getElementById('streak-row').innerHTML = `STREAK ${p1}${p2}`;
 
   // 20K badge
   const badge = document.getElementById('badge-20k');
