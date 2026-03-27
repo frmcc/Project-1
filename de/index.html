@@ -439,8 +439,8 @@
   <button class="gear-btn" id="gear-btn">⚙</button>
   <div class="spacer"></div>
   <div class="app-title">Cardio Tracker</div>
-  <button class="btn btn-z2"   id="btn-mz2">Mo Z2</button>
-  <button class="btn btn-long" id="btn-sat">Sa Lang</button>
+  <button class="btn btn-z2"   id="btn-mz2">Montag Z2</button>
+  <button class="btn btn-long" id="btn-sat">Samstag Lang</button>
   <button class="btn btn-walk" id="btn-walk">Gehen</button>
   <div class="spacer"></div>
 </div>
@@ -568,27 +568,27 @@ function persist() {
 // ═══════════════════════════════════════════
 const CFG = {
   monZ2: {
-    title:    'MO Z2',
+    title:    'MONTAG Z2',
     acc:      'acc-z2',
     pipOn:    'on-z2',
     durCap:   50,
     durStep:  5,
     rules: `Zone 2 Ziel: <span class="hl">147–161 HF</span><br>
-<span class="hl">BESTANDEN</span>: Ø ≤ 161 UND Max ≤ 175 → Serie +1<br>
+<span class="hl">BESTANDEN</span>: Ø ≤ 161 UND Max ≤ 175 → Streak +1<br>
 Zwei Erfolge hintereinander = Progression<br>
-<span class="hl">LEICHTER FEHLSCHLAG</span>: Ø &gt; 161 ODER Max &gt; 175 → Serie 0, gleiche Rx<br>
+<span class="hl">LEICHTER FEHLSCHLAG</span>: Ø &gt; 161 ODER Max &gt; 175 → Streak 0, gleiche Rx<br>
 <span class="hl">SCHWERER FEHLSCHLAG</span>: Ø &gt; 175 → Tempo − 0,5 km/h (Min 5,0)`
   },
   satLong: {
-    title:    'SA LANG',
+    title:    'SAMSTAG LANG',
     acc:      'acc-long',
     pipOn:    'on-long',
     durCap:   120,
     durStep:  10,
     rules: `Zone 2 Ziel: <span class="hl">147–161 HF</span><br>
-<span class="hl">BESTANDEN</span>: Ø ≤ 161 UND Max ≤ 175 → Serie +1<br>
+<span class="hl">BESTANDEN</span>: Ø ≤ 161 UND Max ≤ 175 → Streak +1<br>
 Zwei Erfolge hintereinander = Progression<br>
-<span class="hl">LEICHTER FEHLSCHLAG</span>: Ø &gt; 161 ODER Max &gt; 175 → Serie 0, gleiche Rx<br>
+<span class="hl">LEICHTER FEHLSCHLAG</span>: Ø &gt; 161 ODER Max &gt; 175 → Streak 0, gleiche Rx<br>
 <span class="hl">SCHWERER FEHLSCHLAG</span>: Ø &gt; 175 → Tempo − 0,5 km/h (Min 5,0)<br>
 Bei 120 Min: <span class="hl">20K BEREIT</span>`
   }
@@ -630,7 +630,7 @@ function evalRun(avgHR, maxHR, key) {
   } else {
     // LEICHTER FEHLSCHLAG
     streak = 0;
-    result = { type: 'soft-fail', label: 'Serie zurückgesetzt — gleiche Verschreibung' };
+    result = { type: 'soft-fail', label: 'Streak zurückgesetzt — gleiche Verschreibung' };
   }
 
   return { result, pace, dur, streak };
@@ -686,7 +686,7 @@ function renderSession(key) {
   // Streak pips
   const p1 = `<span class="pip${s.streak >= 1 ? ' ' + cfg.pipOn : ''}"></span>`;
   const p2 = `<span class="pip${s.streak >= 2 ? ' ' + cfg.pipOn : ''}"></span>`;
-  document.getElementById('streak-row').innerHTML = `SERIE ${p1}${p2} ${s.streak} / 2`;
+  document.getElementById('streak-row').innerHTML = `STREAK ${p1}${p2} ${s.streak} / 2`;
 
   // 20K badge
   const badge = document.getElementById('badge-20k');
