@@ -7,8 +7,10 @@ Usage:
 
 import argparse
 import asyncio
+import json
 import random
 import sys
+from pathlib import Path
 
 from scraper.browser import create_browser_context, new_stealth_page
 from scraper.profile import scrape_profile_urls
@@ -36,6 +38,12 @@ def parse_args() -> argparse.Namespace:
         metavar="N",
         help="Number of most-recent videos to process (must be > 0)",
     )
+    parser.add_argument(
+        "--cookies",
+        metavar="FILE",
+        default=None,
+        help="Path to a cookies JSON file exported from your browser (see README)",
+    )
     args = parser.parse_args()
 
     if args.limit <= 0:
@@ -44,12 +52,41 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
-async def run(profile: str, limit: int) -> None:
+def _load_cookies(path: str) -> list[dict]:
+    """Load cookies from a JSON file exported by a browser extension."""
+    raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    cookies = []
+    for c in raw:
+        cookie = {
+            "name": c["name"],
+            "value": c["value"],
+            "domain": c.get("domain", ".tiktok.com"),
+            "path": c.get("path", "/"),
+        }
+        if c.get("secure") is not None:
+            cookie["secure"] = bool(c["secure"])
+        if c.get("httpOnly") is not None:
+            cookie["httpOnly"] = bool(c["httpOnly"])
+        if c.get("expirationDate"):
+            cookie["expires"] = int(c["expirationDate"])
+        elif c.get("expires"):
+            cookie["expires"] = int(c["expires"])
+        cookies.append(cookie)
+    return cookies
+
+
+async def run(profile: str, limit: int, cookies_file: str | None = None) -> None:
     print(f"\n=== TikTok Transcript Scraper ===")
     print(f"Profile : {profile}")
     print(f"Limit   : {limit} video(s)\n")
 
     async with create_browser_context() as (browser, context):
+        # Inject session cookies if provided — required to bypass TikTok's login wall
+        if cookies_file:
+            cookies = _load_cookies(cookies_file)
+            await context.add_cookies(cookies)
+            print(f"[main] Loaded {len(cookies)} cookies from {cookies_file}\n")
+
         # --- Step 1: collect video URLs from the profile page ---
         profile_page = await new_stealth_page(context)
         try:
@@ -95,7 +132,7 @@ async def run(profile: str, limit: int) -> None:
 def main() -> None:
     args = parse_args()
     try:
-        asyncio.run(run(args.profile, args.limit))
+        asyncio.run(run(args.profile, args.limit, args.cookies))
     except KeyboardInterrupt:
         print("\n[main] Interrupted by user.")
         sys.exit(0)

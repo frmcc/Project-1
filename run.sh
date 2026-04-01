@@ -2,32 +2,36 @@
 # ─────────────────────────────────────────────────────
 #  TikTok Transcript Scraper — one-shot runner
 #  Usage:
-#    ./run.sh @username 10
-#    ./run.sh              ← prompts you for both values
+#    ./run.sh @username 10 cookies.json
+#    ./run.sh              ← prompts you for all values
 # ─────────────────────────────────────────────────────
 set -e
 cd "$(dirname "$0")"
 
-# ── 1. Grab args or prompt ───────────────────────────
 PROFILE="${1:-}"
 LIMIT="${2:-}"
+COOKIES="${3:-}"
 
 if [[ -z "$PROFILE" ]]; then
-  read -rp "TikTok profile (e.g. @charlidamelio): " PROFILE
+  read -rp "TikTok profile (e.g. @soma.reset.toronto): " PROFILE
 fi
 if [[ -z "$LIMIT" ]]; then
   read -rp "Number of videos to scrape: " LIMIT
 fi
+if [[ -z "$COOKIES" ]]; then
+  read -rp "Path to cookies.json (press Enter to skip — may hit login wall): " COOKIES
+fi
 
-# ── 2. Install Python deps (skips if already installed) ──
 echo ""
 echo "▶  Checking dependencies..."
 pip install -q -r requirements.txt
 
-# ── 3. Install Chromium browser (skips if already installed) ──
 echo "▶  Checking Playwright browser..."
-playwright install chromium --with-deps 2>/dev/null || playwright install chromium
+playwright install chromium 2>/dev/null || true
 
-# ── 4. Run the scraper ───────────────────────────────
 echo ""
-python main.py --profile "$PROFILE" --limit "$LIMIT"
+if [[ -n "$COOKIES" ]]; then
+  python main.py --profile "$PROFILE" --limit "$LIMIT" --cookies "$COOKIES"
+else
+  python main.py --profile "$PROFILE" --limit "$LIMIT"
+fi
