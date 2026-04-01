@@ -49,12 +49,16 @@ async def create_browser_context():
             r"\.(png|jpg|jpeg|gif|webp|svg|ico|woff2?|ttf|eot)(\?.*)?$",
             re.IGNORECASE,
         )
-        await context.route(
-            "**/*",
-            lambda route: route.abort()
-            if _asset_re.search(route.request.url)
-            else route.continue_(),
-        )
+
+        async def _block_assets(route):
+            # route.abort() / route.continue_() are coroutines — must be awaited.
+            # A plain lambda would return the coroutine un-awaited (silent no-op).
+            if _asset_re.search(route.request.url):
+                await route.abort()
+            else:
+                await route.continue_()
+
+        await context.route("**/*", _block_assets)
         try:
             yield browser, context
         finally:
