@@ -47,8 +47,9 @@ def _parse_webvtt(vtt_text: str) -> tuple[str, list[dict]]:
     while i < len(lines):
         line = lines[i].strip()
         # Timestamp line
+        # Support both HH:MM:SS.mmm and MM:SS.mmm (short TikTok videos omit hours)
         ts_match = re.match(
-            r"(\d{2}:\d{2}:\d{2}[.,]\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}[.,]\d{3})",
+            r"((?:\d{2}:)?\d{2}:\d{2}[.,]\d{3})\s*-->\s*((?:\d{2}:)?\d{2}:\d{2}[.,]\d{3})",
             line,
         )
         if ts_match:
@@ -225,7 +226,10 @@ async def _extract_once(context: BrowserContext, video_url: str) -> Optional[dic
 
     try:
         print(f"[transcript] Loading {video_url}")
-        await page.goto(video_url, wait_until="networkidle", timeout=30_000)
+        # "networkidle" times out on TikTok due to constant background pings.
+        # Use "load" + a small fixed wait so the player can fire subtitle requests.
+        await page.goto(video_url, wait_until="load", timeout=30_000)
+        await asyncio.sleep(2)
 
         # Extract video ID from URL
         vid_match = VIDEO_ID_RE.search(video_url)
@@ -252,7 +256,10 @@ async def _extract_once(context: BrowserContext, video_url: str) -> Optional[dic
             if sub_url:
                 print(f"[transcript] Fetching subtitle from page JSON: {sub_url}")
                 try:
-                    resp = await context.request.get(sub_url)
+                    resp = await context.request.get(
+                        sub_url,
+                        headers={"Referer": video_url},
+                    )
                     body = await resp.text()
                     if body.strip().startswith("WEBVTT"):
                         vtt_text = body

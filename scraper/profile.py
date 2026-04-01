@@ -23,7 +23,13 @@ async def scrape_profile_urls(page: Page, profile: str, limit: int) -> List[str]
     profile_url = f"{TIKTOK_BASE}/@{handle}"
 
     print(f"[profile] Navigating to {profile_url}")
-    await page.goto(profile_url, wait_until="networkidle", timeout=30_000)
+    # "networkidle" times out on TikTok due to constant analytics pings.
+    # Use "load" then wait for the first video card to appear.
+    await page.goto(profile_url, wait_until="load", timeout=30_000)
+    try:
+        await page.wait_for_selector(VIDEO_LINK_SELECTOR, timeout=15_000)
+    except Exception:
+        print("[profile] Warning: video grid did not appear within 15s, continuing anyway")
 
     seen: dict[str, None] = {}  # ordered set via dict keys
     stall_count = 0
