@@ -2,6 +2,7 @@
 Browser context factory with Playwright + stealth configuration.
 """
 
+import re
 from contextlib import asynccontextmanager
 from playwright.async_api import async_playwright, Browser, BrowserContext, Page
 from playwright_stealth import stealth_async
@@ -42,10 +43,17 @@ async def create_browser_context():
             ignore_https_errors=True,
             java_script_enabled=True,
         )
-        # Block unnecessary resource types to reduce fingerprint noise
+        # Block static assets that are irrelevant to scraping.
+        # Playwright globs don't support {a,b} brace expansion; use a regex instead.
+        _asset_re = re.compile(
+            r"\.(png|jpg|jpeg|gif|webp|svg|ico|woff2?|ttf|eot)(\?.*)?$",
+            re.IGNORECASE,
+        )
         await context.route(
-            "**/*.{png,jpg,jpeg,gif,webp,svg,ico,woff,woff2,ttf,eot}",
-            lambda route: route.abort(),
+            "**/*",
+            lambda route: route.abort()
+            if _asset_re.search(route.request.url)
+            else route.continue_(),
         )
         try:
             yield browser, context

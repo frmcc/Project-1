@@ -157,7 +157,33 @@ def _extract_metadata_from_page_json(page_json: dict) -> dict:
 
 
 async def _get_page_json(page: Page) -> Optional[dict]:
-    """Extract the __UNIVERSAL_DATA_FOR_REHYDRATION__ JSON blob from the page."""
+    """
+    Extract TikTok's embedded page data.
+
+    Tries three sources in order:
+      1. window['__UNIVERSAL_DATA_FOR_REHYDRATION__'] JS variable (most reliable,
+         avoids parsing the raw script-tag text which is a JS assignment not JSON)
+      2. window.__NEXT_DATA__ (legacy/SSR TikTok routes)
+      3. Raw textContent of the script tag as last resort, stripping the
+         assignment prefix before JSON-parsing
+    """
+    # Source 1: evaluate the live window variable directly
+    try:
+        data = await page.evaluate("() => window['__UNIVERSAL_DATA_FOR_REHYDRATION__']")
+        if data and isinstance(data, dict):
+            return data
+    except Exception:
+        pass
+
+    # Source 2: Next.js data (some TikTok routes)
+    try:
+        data = await page.evaluate("() => window.__NEXT_DATA__")
+        if data and isinstance(data, dict):
+            return data
+    except Exception:
+        pass
+
+    # Source 3: raw script tag text — strip JS assignment prefix if present
     try:
         raw = await page.evaluate(
             """() => {
@@ -166,9 +192,13 @@ async def _get_page_json(page: Page) -> Optional[dict]:
             }"""
         )
         if raw:
-            return json.loads(raw)
+            # Strip leading JS assignment: `window['...'] = ` or `window["..."] = `
+            json_str = re.sub(r'^[^{]*', '', raw.strip())
+            if json_str:
+                return json.loads(json_str)
     except Exception:
         pass
+
     return None
 
 
@@ -183,10 +213,13 @@ async def _extract_once(context: BrowserContext, video_url: str) -> Optional[dic
         if "text/vtt" in content_type or SUBTITLE_URL_RE.search(url):
             try:
                 body = await response.text()
-                if body.strip().startswith("WEBVTT"):
-                    captured_vtt.append(body)
             except Exception:
-                pass
+                try:
+                    body = (await response.body()).decode("utf-8", errors="replace")
+                except Exception:
+                    return
+            if body.strip().startswith("WEBVTT"):
+                captured_vtt.append(body)
 
     page.on("response", on_response)
 
